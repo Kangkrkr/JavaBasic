@@ -10,7 +10,7 @@ public class BaseBall {
 
 	private static int count = 0;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) { // 2 3 4 5 6 7 8 9 아님 (0,1확실)
 
 		Scanner scan = new Scanner(System.in);
 
