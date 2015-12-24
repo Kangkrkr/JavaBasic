@@ -66,15 +66,20 @@ public class BaseBall {
 		}
 	}
 
-	// 1 2 4 (user)		0 6 7		0 8 4	 1 4 9
-	// 4 5 6 (com )		7 6 0		4 8 0	 9 4 1
+	// 1 2 4 (user)
+	// 4 5 6 (com )
 	// 야구게임을 시작한다. 유저의 배열을 기준으로 컴퓨터와 비교한다.
 	public static void startBaseball(int user[], int computer[]){
 		
 		for(int i=0; i<user.length; i++){
+			int breakIndex = -1;
 			for(int j=0; j<computer.length; j++){
 				
-				System.out.println(i+" : "+user[i]+" -> "+j+" : "+computer[j]);
+				if(user[i] == computer[j]){
+					int noFunction = (i == j) ? S++ : B++;
+					break;
+				}
+				
 			}
 		}
 		
