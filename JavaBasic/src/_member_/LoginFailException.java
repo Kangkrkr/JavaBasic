@@ -16,6 +16,7 @@ public class LoginFailException extends RuntimeException {
 		File file = new File("log.txt");
 		try {
 			FileWriter writer = new FileWriter(file);
+			// FileWriter writer = new FileWriter(file, true); true시 append 모드가 된다.
 			
 			if(obj instanceof MemberVO){
 				MemberVO memberVO = (MemberVO)obj;

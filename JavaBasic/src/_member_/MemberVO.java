@@ -7,6 +7,14 @@ public class MemberVO {
 	private String userID;
 	private String userName;
 	private String userPWD;
+	
+	public MemberVO(){}
+	
+	public MemberVO(String userID, String userName, String userPWD) {
+		this.userID = userID;
+		this.userName = userName;
+		this.userPWD = userPWD; // P
+	}
 
 	public String getUserID() {
 		return userID;
