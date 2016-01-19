@@ -1,10 +1,10 @@
 package _thread_;
 
-public class ThreadTest extends Thread {
+public class ThreadTest2 extends Thread {
 
 	public static void main(String[] args) {
 
-		ThreadTest thread = new ThreadTest();
+		ThreadTest2 thread = new ThreadTest2();
 		thread.start();
 		
 		for(int i=1; i<=5; i++){

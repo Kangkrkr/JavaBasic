@@ -1,0 +1,1 @@
+select user_name from t_member where user_id='kangkrkr' and user_pw='ebecf27f9d01a31e1b7fde7d28befe992491ca5678e5c1faf59d688171ff0dc120e75c888213ce340cf8d3bae4c431fbfb6992719a4372b51b9dd88b81547f01';

@@ -235,6 +235,20 @@ SELECT employee_id, last_name, salary, manager_id
 FROM employees
 WHERE manager_id IN (100, 101, 201);
 
+[ NOT IN 키워드 - 데이터베이스에서 해당 값이 존재하지 않는것만 출력 ]
+( IN 키워드와는 달리, 아래와 같이 사용시에는 'AND' 연산자를 통해 비교해야 한다.
+SELECT employee_id, last_name, salary, manager_id
+FROM employees
+WHERE manager_id <> 100 AND
+      manager_id <> 101 AND
+      manager_id <> 201;
+
+다음과 같이 'IN 키워드'를 사용하면 간단명료하다.
+
+SELECT employee_id, last_name, salary, manager_id
+FROM employees
+WHERE manager_id NOT IN (100, 101, 201);
+
 
 [ LIKE 키워드 ]
 
@@ -262,3 +276,360 @@ WHERE job_id LIKE '%SA\_%' ESCAPE '\';
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
+
+[ 2016 - 01 - 12 ]
+
+[ AND 연산자와 OR 연산자 사용시 비교 ]
+
+( OR 연산자 )
+/* TRUE AND NULL ---> TRUE
+   FALSE AND NULL ---> NULL
+   NULL AND NULL ---> NULL */
+SELECT employee_id, last_name, job_id, salary
+FROM employees
+WHERE salary >= 10000
+OR job_id LIKE '%MAN%';
+
+( AND 연산자 )
+/* TRUE AND NULL ---> NULL
+   FALSE AND NULL ---> FALSE
+   NULL AND NULL ---> NULL */
+SELECT employee_id, last_name, job_id, salary
+FROM employees
+WHERE salary >= 10000
+AND job_id LIKE '%MAN%';
+
+
+[ 오름차순 ASC(ASCENDING), 내림차순 DSC(DESCENDING) ]
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+[ 함수 - 1.단일 행 함수   2. 여러 행 함수 ]
+
+단일 행 함수 : 단일 행만 연산하며, 행 당 하나의 결과를 반환한다.
+복수 행 함수 : 예로는 avg(컬럼명), sum, max, min 등이 있다.
+
+
+[ dual 테이블의 사용 목적 ]
+--SELECT initcap('SQL course') FROM dual;
+-- dual 테이블은 관리자 계정의 테이블이다. 권한이 public 이므로 누구나 사용가능하다. 1건짜리의 데이터를 확인할때 주로 사용한다.
+SELECT sysdate FROM dual;
+
+
+[ 함수의 적용 기준 ]
+SELECT employee_id, last_name, department_id
+FROM employees
+WHERE last_name = INITCAP('higgins');
+-- Column 에 함수를 적용하지말고, 비교할 입력값에 적용하도록 한다.
+
+
+[ INSTR ]
+SELECT INSTR('HelloWorld', 'o') FROM dual;		-->		해당 문자열에서 첫번째로 발견된 검색문자의 인덱스 반환(1부터 시작) : 5
+SELECT INSTR('HelloWorld', 'o', 5, 2) FROM dual		-->		5번째 문자를 기준으로 +2 위치의 검색문자를 검색	: 7
+
+
+[ TRIM ]
+-- LTRIM, RTRIM, LRTRIM 을 사용할 수 있다.
+SELECT TRIM('H' from 'HelloWorld') FROM dual;
+--SELECT LTRIM('HelloWorld', 'He') FROM dual
+--SELECT RTRIM('HelloWorld', 'ld') FROM dual;
+
+
+[ 날짜 구하기 ]
+// 아래 쿼리문은 현재 시간에서 3시간 40분후의 날짜를 출력한다.
+SELECT to_char(sysdate + 3/24 + 40/(24/60), 'YYYY-MM-DD HH24:MI:SS') as 시간 from dual;
+
+// to_char() 함수는 첫번째인자의 데이터를 두번째인자인 데이터포맷으로 바꾸어 준다. 날짜 표현시 년도는 반드시 4자리로 출력하도록 한다.
+SELECT TO_CHAR(sysdate, 'YYYY-MM-DD') FROM dual;
+
+
+[ PL / SQL ]
+
+(DECODE 문의 사용)
+SELECT last_name, job_id, salary,
+DECODE (job_id, 'IT_PROG', 1.10*salary,
+                'ST_CLERK', 1.15*salary,
+                'SA_REP'  , 1.20*salary,
+        salary) REVISED_SALARY
+FROM employees;
+
+(DECODE 문을 사용한 청팀백팀 구분)
+SELECT employee_id, last_name,
+       DECODE (MOD(employee_id, 2),
+               0, '청군',
+                  '백군') TEAM
+FROM employees;
+
+
+[ 오라클의 숫자표현 ]
+오라클DB에서는 자바처럼 int, float 타입이 존재하지 않고, 수를 표현하기위해 Number 타입이라는 것을 사용한다. 7000/10000 은 0.7 이 출력되게 되는 것이다.
+
+
+[ TRUNC 함수의 사용 - 소수를 잘라준다. ]
+( salary 1~10000은 LOW, 10001~20000은 MID, 그보다 큰 salary는 HIGH로 출력하기 )
+---> TRUNC((salary-1)/10000) 를 사용해 소수의 결과는 잘라내었다.
+SELECT last_name, salary,
+       DECODE (TRUNC((salary-1)/10000),
+               0, 'Low',
+               1, 'Mid',
+                  'High') salary_grade
+FROM employees;
+
+
+[ Simpled Case 문의 사용 ]
+SELECT last_name, salary,
+       CASE TRUNC((salary-1)/10000) 
+               WHEN 0 THEN 'Low'
+               WHEN 1 THEN 'Mid'
+               ELSE 'High' END AS salary_grade
+FROM employees;
+
+
+[ Searched Case 문의 사용 - WHEN 안에 비교수식의 사용이 가능하다. ]
+SELECT last_name, salary,
+       CASE 
+               WHEN salary <= 10000 THEN 'Low'
+               WHEN salary <= 20000 THEN 'Mid'
+               ELSE 'High' 
+       END AS salary_grade
+FROM employees;
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+[[ ORACLE JOIN ]]
+
+[ JOIN 문 사용하기 (계정 내 테이블간의 조인) ]
+조인의 종류 -> Oracle JOIN, ANSI JOIN
+
+( Oracle JOIN ) : 1.equi join 2.non equi join 3.outer join 4.self join ---->> FULL OUTER 불가능
+
+[ EQUI 조인 ]
+-- 동등 조인
+-- 외래키 : employees.department_id 
+-- 기본키 : departments.department_id
+-- employees 테이블의 department_id와 departments 테이블의 department_id 가 동등한 각각의 어트리뷰트를 뽑아낸다.
+-- display : employees.last_name, departments.DEPARTMENT_NAME
+-- join condition : department_id
+SELECT employees.last_name, departments.department_name 
+FROM employees, departments
+WHERE employees.department_id = departments.department_id;
+
+[ NON EQUI JOIN ]
+-- display : employees.last_name, employees.salary, job_grades.grade_level
+-- join condition :
+-- employees.salary between job_grades.lowest_sal and job_grades.highest_sal
+SELECT employees.last_name, employees.salary, job_grades.grade_level
+FROM employees, job_grades
+WHERE employees.salary between job_grades.lowest_sal and job_grades.highest_sal;
+
+[ LEFT OUTER 조인 - 왼쪽 컬럼을 모두 출력시킨다. ]
+-- left outer join ( H1001 계정에서 )
+SELECT employees.last_name, nvl(departments.department_name, '대기발령중') AS department_name 
+FROM employees, departments
+WHERE employees.department_id = departments.department_id(+);
+
+-- left outer join ( SCOTT 계정에서 )
+SELECT ename, dname 
+FROM emp, dept 
+WHERE emp.deptno = dept.deptno(+);
+
+[ RIGHT OUTER 조인 - 오른쪽 컬럼을 모두 출력시킨다. ]
+-- right outer join ( SCOTT 계정에서 )
+SELECT ename, dname 
+FROM emp, dept 
+WHERE emp.deptno(+) = dept.deptno;
+
+-- right outer join ( 사원이 없는 부서 출력하기 . H1001 계정에서 )
+SELECT employees.last_name, nvl(employees.last_name, '사원없는 부서') AS department_name 
+FROM employees, departments
+WHERE employees.department_id(+) = departments.department_id ORDER BY department_name ASC;
+
+[ SELF JOIN ]
+( SCOTT 계정 )
+-- 각 사원을 출력하는데, 각 사원의 상사가 누구인지 출력하기. 자신의 테이블에 자신을 조인한다.
+-- 셀프 조인시에는 테이블에 반드시 별칭을 붙여야 한다.
+-- KING 이 사장이므로 상사는 NULL이기 때문에 그것까지 출력하기 위해 left join을 사용함.
+SELECT e.ename 사원, m.ename 상사 
+FROM emp e, emp m 
+WHERE e.mgr = m.empno(+);
+
+( H1001 계정 )
+-- employees 테이블에서 특정사원의 manager_id 와 다른 특정사원의 employee_id가 일치하는 데이터를 뽑아낸다.
+SELECT e.first_name 사원, m.first_name 상사 
+FROM EMPLOYEES e, EMPLOYEES m 
+WHERE e.MANAGER_ID = m.employee_id(+);
+
+( ANSI   JOIN ) ------->> FULL OUTER 가능.
+
+-- equi join
+SELECT e.ename, d.dname
+FROM emp e JOIN dept d
+ON e.deptno = d.deptno;
+
+-- non equi join
+SELECT e.ename, e.sal, s.grade
+FROM emp e JOIN salgrade s
+ON e.sal between s.losal and hisal;
+
+-- left outer join
+SELECT e.ename, d.dname
+FROM emp e LEFT OUTER JOIN dept d
+ON e.deptno = d.deptno;
+
+-- full outer join
+SELECT e.ename, d.dname
+FROM emp e FULL OUTER JOIN dept d
+ON e.deptno = d.deptno;
+
+-- self join
+SELECT e.ename, m.ename
+FROM emp e LEFT OUTER JOIN emp m
+ON e.mgr = m.empno;
+
+-- natural join
+-- NATURAL JOIN 조인을 결정하는 조건이 없으므로 자동으로 조인 조건을 이용하는 것이 있는데, 컬럼의 이름이 같으면 자동으로 붙여버린다.
+-- 문제점이 발생할 수 있으므로 사용하는 것을 '지양'한다.
+SELECT last_name, department_name
+FROM employees NATURAL JOIN departments;
+
+-- 그러므로 검색할 컬럼을 따로 USING 키워드를 통해 지정해주어 사용한다.
+SELECT last_name, department_name
+FROM employees LEFT OUTER JOIN departments USING (department_id);
+
+-- 크로스 조인 : 20행 x 8행 = 160행 ---> Cartesian Product 값을 얻을때 사용
+SELECT last_name, department_name
+FROM employees CROSS JOIN departments;
+
+-- three ways join
+-- e.last_name, d.department_name, e.salary, j.grade_level (three ways join)
+SELECT e.last_name, d.department_name, e.salary, j.grade_level, l.city, c.country_name, r.region_name
+FROM employees e, departments d, job_grades j, locations l, countries c, regions r
+WHERE e.department_id = d.department_id(+)
+AND salary between j.LOWEST_SAL and j.HIGHEST_SAL(+)
+AND d.location_id = l.location_id(+)
+AND l.country_id = c.country_id(+)
+AND c.region_id = r.region_id(+);
+
+-- ANSI로 나타낸 three ways join
+SELECT e.ename, d.dname, e.sal, s.grade
+FROM emp e 
+LEFT OUTER JOIN dept d ON e.deptno = d.deptno
+LEFT OUTER JOIN salgrade s ON e.sal between s.losal and s.hisal;
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+[ 2016 - 01 - 14 ]
+
+데이터베이스에는 DDL(데이터정의어), DML(데이터조작어), DCL, TCL(트랜잭션 컨트롤어) 이 있다.
+TCL 에는 commit, rollback, savepoint 가 있다. 여기서 트랙잭션이란 '최소업무 단위'라고 보면 된다.
+하나의 업무를 바로 확정지으면 오류가 일어날수 있으므로, 확정지을때는 commit, 취소시에는 rollback을 사용한다. 특점시점저장은 savepoint 사용.
+사용법은 간단하다.
+
+insert into t_member(user_id, user_name, user_pw)
+values('kangkrkr', '강승윤', 'ebecf27f9d01a31e1b7fde7d28befe992491ca5678e5c1faf59d688171ff0dc120e75c888213ce340cf8d3bae4c431fbfb6992719a4372b51b9dd88b81547f01');
+
+savepoint s1;
+
+insert into t_member(user_id, user_name, user_pw)
+values('kyd', '김영두', 'ebecf27f9d01a31e1b7fde7d28befe992491ca5678e5c1faf59d688171ff0dc120e75c888213ce340cf8d3bae4c431fbfb6992719a4372b51b9dd88b81547f01');
+
+savepoint s2;
+
+rollback to s1; -- 여기서 s1으로 롤백을 하면 두번째로 삽입했던 레코드와, 만들어 두었던 포인트 s2가 취소가 되며 s1 포인트 지점으로 돌아간다.
+commit;			-- 현재까지의 내역을 확정 짓는다. commit 과 동시에 현재까지 저장된 savepoint 가  모두 삭제된다.
+
+
+[ UPDATE 문의 사용 ]
+-- WHERE 문을 사용하지 않으면 전체 레코드가 수정된다.
+UPDATE T_MEMBER SET USER_ID='pocket0826', USER_NAME='강승현'
+WHERE USER_ID='kangkrkr';
+
+[ DELETE 구문의 사용 ]
+DELETE FROM T_MEMBER
+WHERE USER_ID='pocket0826';
+
+
+[ PreparedStatement 의 사용 ]
+파라미터 쿼리 방식.
+1. 작성의 용이성
+2. SQL Injection 에 뚫릴 확률이 줄어든다.
+3. 성능이 향상된다.
+
+StringBuffer sql = new StringBuffer();
+sql.append("SELECT user_id, user_name ");
+sql.append("FROM t_member ");
+sql.append("WHERE user_id=? AND user_pw=?");
+
+pst = conn.prepareStatement(sql.toString());
+pst.setString(1, user_id);				--->> id 값은 테이블 생성시 unique로 주었기 때문에, 중복되지 않는다.
+pst.setString(2, user_pw);
+
+int result = st.executeUpdate();		--->> insert, update, delete 등의 DML은 ResultSet이 없으며 executeUpdate()를 사용한다.
+System.out.println(result);				--->> update, delete 시에는 반드시 수행처리된 레코드수의 반환값을 확인해야한다.
+---------------------------------------------------------------------------------------------------------------------------------
+
+[ 2016 - 01 - 15 ]
+
+count() 함수 사용하기	---->>	 count(*)
+selectSql.append("SELECT count(*) AS cnt FROM t_member ");
+selectSql.append("WHERE user_id=? AND user_pw=?");
+
+st = conn.prepareStatement(selectSql.toString());
+st.setString(1, user_id);
+st.setString(2, user_pw);
+rs = st.executeQuery();
+
+if(rs.next()){
+	if(rs.getInt("cnt") == 0){	---->>	cnt 컬럼의 값이 0이라면 조회하지 못했다는 것이다.
+		System.out.println("아이디 혹은 패스워드가 틀립니다.");
+		System.exit(0);
+	}
+	
+	System.out.println(user_id+" 님의 정보를 수정합니다.");
+}
+
+
+[ 문제 - 테이블을 만든다. 컬럼은 이름(UNIQUE), 전화번호, 생년(Date타입 혹은 숫자 4개로만)으로 만들고, 자바에서 출력시 컬렁명과 추가로 생년옆에 나이도 출력. ]
+테이블 생성시 생년의 타입을 number로 주면 길이에 따라 알아서 늘어나며, number(p) 타입으로 주면 p로 지정한 숫자까지만 된다.
+이클립스에서 commit 시, 세미콜론을 붙이면 에러가 발생하기 때문에 세미콜론을 붙이지 않는다.
+---------------------------------------------------------------------------------------------------------------------------------
+
+[ 2016 - 01 - 18 . 로거와 로거JDBC 사용법 ]
+
+Logger 사용법 -> 우선, 프로젝트의 소스폴더에 log4j.properties 파일을 생성하여 다음의 내용을 붙여넣는다.
+
+#DEBUG, INFO, WARN, ERROR, FATAL
+log4j.rootCategory=DEBUG, console, filelog
+
+log4j.appender.console=org.apache.log4j.ConsoleAppender
+log4j.appender.console.layout=org.apache.log4j.PatternLayout
+log4j.appender.console.layout.ConversionPattern=%-5p,%d{yyyy/MM/dd HH:mm:ss.SSS},%-5X{APP}, %-8X{TSC}, %m %n
+
+log4j.appender.filelog=org.apache.log4j.DailyRollingFileAppender
+
+log4j.appender.filelog.Append=true
+log4j.appender.filelog.DatePattern='.'yyyy-MM-dd-HH
+log4j.appender.filelog.File=C:/javaLog/logs/logs.txt
+log4j.appender.filelog.layout=org.apache.log4j.PatternLayout
+log4j.appender.filelog.layout.ConversionPattern=%-5p,%d{yyyy/MM/dd HH:mm:ss.SSS},%-5X{APP}, %-8X{TSC}, %m %n
+
+(자바코드에서 로거 객체를 다음과 같이 생성할 수 있다.)
+
+Logger log = Logger.getRootLogger();		---->>		아파치의 log4j
+Logger logger = LoggerFactory.getLogger(JdbcTest10.class);		---->>		slf4j 용 logger.
+
+[Log4JDBC 사용법 - 데코레이션 패턴 : 어떤 작업에 추가적인 작업이나, 작업 전후에 특정 작업을 덧붙일 수 있다.]
+(데코레이션 패턴이란 ? - 
+다음의 코드를 사용하여 데이터베이스에 연결한다.DB 인터페이스들을 사용시 자동으로 DB 로그가 출력된다.
+Class.forName("net.sf.log4jdbc.DriverSpy");
+conn = DriverManager.getConnection("jdbc:log4jdbc:oracle:thin:@localhost:1521:xe", "n1", "n1");
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+[ 2016 - 01 - 19 ]
+
+( Thread )
+ yield() : 대기중인 다른 스레드들에게 실행권한을 양보하고 이 스레드는 쉰다.
+ 
+ Thread 를 상속받았을 시에는 set,getName() 을 사욯하고
+ Runnable 을 implements 했을때는 Thread.currentThread.getName() 을 사용한다.
